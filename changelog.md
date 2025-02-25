@@ -1,2 +1,2 @@
 # 1.0.0
-- First and most likely final feature version.
+- Initial release. Updating to a new version is manual.
