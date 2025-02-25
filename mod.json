@@ -1,0 +1,22 @@
+{
+	"geode": "4.2.0",
+	"gd": {
+		"win": "2.2074",
+		"android": "2.2074",
+		"mac": "2.2074",
+		"ios": "2.2074"
+	},
+	"id": "beat.pack-installer",
+	"name": "CS Pack Installer",
+	"version": "v1.0.0",
+	"developer": "Beat",
+	"description": "Installs Click Packs for Click Sounds.",
+	"tags": [
+		"paid"
+	],
+	"resources": {
+		"sprites": [
+			"resources/piicon.png"
+		]
+	}
+}
