@@ -8,7 +8,7 @@ using namespace geode::prelude;
 
 class $modify(MenuLayer) {
 	struct Fields {
-		EventListener<web::WebTask> m_listener;
+		EventListener<web::WebTask> m_userVerifyListener;
 	};
 
 	bool init () {
@@ -16,7 +16,7 @@ class $modify(MenuLayer) {
 			return false;
 		}
 
-		m_fields->m_listener.bind([this] (web::WebTask::Event* e) {
+		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
@@ -45,8 +45,18 @@ class $modify(MenuLayer) {
             }
         });
 
+		/*m_fields->m_packCountListener.bind([this] (web::WebTask::Event* e) {
+            if (web::WebResponse* res = e->getValue()) {
+				m_fields->m_packCount = std::stoi(res->string().unwrap());
+            } else if (e->isCancelled()) {
+                this->invalidVerify();
+				log::debug("Failed to get count file, defaulting to 10.");
+            }
+        });*/
+
 		auto req = web::WebRequest();
-		m_fields->m_listener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
+		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
+		// m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
 		return true;
 	}
 
@@ -68,10 +78,30 @@ class $modify(MenuLayer) {
 };
 
 class $modify(IndexModGarageLayer, GJGarageLayer) {
+	
+	struct Fields {
+		EventListener<web::WebTask> m_packCountListener;
+		int m_packCount = 10;
+	};
+	
 	bool init() {
 		if (!GJGarageLayer::init()) {
 			return false;
 		}
+
+		// get pack count by web
+
+		m_fields->m_packCountListener.bind([this] (web::WebTask::Event* e) {
+            if (web::WebResponse* res = e->getValue()) {
+				m_fields->m_packCount = std::stoi(res->string().unwrap());
+            } else if (e->isCancelled()) {
+				log::debug("Failed to get count file, defaulting to 10.");
+            }
+        });
+
+		auto req = web::WebRequest();
+		m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
+
 
 		// sets the persistent directory to the geode folder if the user hasnt ever chosen a path before
 		if (Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir").empty() || !std::filesystem::exists(Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir"))) {
@@ -96,13 +126,13 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 
 	void onPiButton(CCObject* sender) {
 		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
-			geode::createQuickPopup("CS Pack Installer", "Thank you for boosting the Click Sounds server!\n<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next", nullptr, [](auto, bool btn1) {
+			geode::createQuickPopup("CS Pack Installer", "Thank you for boosting the Click Sounds server!\n<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next", nullptr, [this](auto, bool btn1) {
 				if (!btn1) {
-					geode::createQuickPopup("CS Pack Installer", "To make a pack, use the pack generator on the Click Sounds website.", "Next", nullptr, [](auto, bool btn1) {
+					geode::createQuickPopup("CS Pack Installer", "To make a pack, use the pack generator on the Click Sounds website.", "Next", nullptr, [this](auto, bool btn1) {
 						if (!btn1) {
-							geode::createQuickPopup("CS Pack Installer", "To redownload the index after clearing it, disable CSPI temporarily and restart Geometry Dash.", "Next", nullptr, [](auto, bool btn1) {
+							geode::createQuickPopup("CS Pack Installer", "To redownload the index after clearing it, disable CSPI temporarily and restart Geometry Dash.", "Next", nullptr, [this](auto, bool btn1) {
 								if (!btn1) {
-									geode::createQuickPopup("CS Pack Installer", "Packs installed here can have a maximum of \n<cg>10 Click Sounds and 10 Release Sounds.</c>", "Next", nullptr, [](auto, bool btn1) {
+									geode::createQuickPopup("CS Pack Installer", fmt::format("Packs installed here can have a maximum of \n<cg>{} Click Sounds and {} Release Sounds.</c>", m_fields->m_packCount, m_fields->m_packCount), "Next", nullptr, [](auto, bool btn1) {
 										if (!btn1) {
 											geode::createQuickPopup("CS Pack Installer", "Once again, thank you for boosting the server. Have fun!", "Close", nullptr, [](auto, bool btn1){
 												if (!btn1) { Mod::get()->setSavedValue<bool>("read-warnings", true); }
@@ -120,7 +150,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		if (Mod::get()->getSavedValue<bool>("read-warnings"))
 			geode::createQuickPopup(
 				"CS Pack Installer",
-				"What would you like to do?",
+				fmt::format("What would you like to do?\n\nPacks with up to {} clicks and releases per type can be installed.", m_fields->m_packCount),
 				"Clear Index", "Add Pack",
 				[this, sender](auto, bool btn1) {
 					if (btn1) {
@@ -224,17 +254,16 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 
 					if (!unzipResult) return false;
                 	
-                	if (numClicksFiles > 10 || numReleasesFiles > 10) {
+                	if (numClicksFiles > m_fields->m_packCount || numReleasesFiles > m_fields->m_packCount) {
                 	    Loader::get()->queueInMainThread([=] {
 							std::filesystem::remove_all(newDir);
 						});
 						geode::createQuickPopup(
 							"CS Pack Installer",
-							"Pack failed to install: Too many files (max 10 clicks and 10 releases)",
-							"Restart", nullptr,
+							fmt::format("Pack failed to install: Too many files (max {} clicks and {} releases)", m_fields->m_packCount, m_fields->m_packCount),
+							"Close", nullptr,
 							[newZipPath](auto, bool btn1) {
 								std::filesystem::remove(newZipPath);
-								game::restart();
 							}
 						);
                 	} else {
