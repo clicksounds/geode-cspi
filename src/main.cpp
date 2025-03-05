@@ -58,7 +58,7 @@ class $modify(MenuLayer) {
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		
 		// auto update system
-
+		/*
 		m_fields->m_latestPastebinListener.bind([this] (web::WebTask::Event* e) {
 			if (web::WebResponse* res = e->getValue()) {
 				m_fields->m_cdnLink = res->string().unwrap();
@@ -75,8 +75,8 @@ class $modify(MenuLayer) {
 				}
 			}
 		});
-
-		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
+		
+		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));*/
 		m_fields->m_gameInitialized = true;
 		return true;
 	}
