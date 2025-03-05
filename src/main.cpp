@@ -20,7 +20,7 @@ class $modify(MenuLayer) {
 			return false;
 		}
 
-		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
+		/*m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
@@ -46,7 +46,7 @@ class $modify(MenuLayer) {
                 this->invalidVerify();
 				log::debug("Failed to get file");
             }
-        });
+        });*/
 		
 		// auto update system
 
@@ -63,16 +63,16 @@ class $modify(MenuLayer) {
 				if (res->string().unwrapOr("failed") == "failed" || m_fields->m_gameInitialized) return;
 				std::filesystem::path tempDownloadPath = dirs::getTempDir() / "beat.pack-installer-temp.geode";
 				res->into(tempDownloadPath);
-				/*if (res->into(tempDownloadPath)) {
+				if (res->into(tempDownloadPath)) {
 					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
 					std::filesystem::remove(tempDownloadPath);
-				}*/
+				}
 				m_fields->m_gameInitialized = true;
 			}
 		});
 
 		auto req = web::WebRequest();
-		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
+		//m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
 		m_fields->m_autoUpdateListener.setFilter(req.get(m_fields->m_cdnLink));
 		return true;
