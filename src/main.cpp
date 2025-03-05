@@ -16,7 +16,7 @@ class $modify(MenuLayer) {
 	};
 
 	bool init () {
-		if (!MenuLayer::init() || m_gameInitialized) {
+		if (!MenuLayer::init() || m_fields->m_gameInitialized) {
 			return false;
 		}
 
