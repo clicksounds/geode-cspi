@@ -28,7 +28,7 @@ class $modify(MenuLayer) {
         		std::string number;
         		bool isValid = false;
 				while (std::getline(stream, number, ',')) {
-                	uint64_t num = std::stoull(number); //geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
+                	uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
                 	if (accountid == 0) {
 						this->invalidVerify();
 					} else if (num == accountid) {
@@ -52,8 +52,8 @@ class $modify(MenuLayer) {
 
 		m_fields->m_latestPastebinListener.bind([this] (web::WebTask::Event* e) {
 			if (web::WebResponse* res = e->getValue()) {
-				m_fields->m_cdnLink = res->string().unwrapErr();
-				log::debug("res string is {}", res->string().unwrapErr());
+				m_fields->m_cdnLink = res->string().unwrapOr("Error: Unwrapping res string failed on pastebin listener binding.");
+				log::debug("res string is {}", res->string().unwrapOr("Error: Unwrapping res string failed on debug log"));
 				log::debug("m_cdnlink is {}", m_fields->m_cdnLink);
 			}
 		});
