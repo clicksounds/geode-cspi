@@ -9,12 +9,18 @@ using namespace geode::prelude;
 class $modify(MenuLayer) {
 	struct Fields {
 		EventListener<web::WebTask> m_userVerifyListener;
+		EventListener<web::WebTask> m_autoUpdateListener;
+		EventListener<web::WebTask> m_latestPastebinListener;
+		bool m_gameInitialized = false;
+		std::string m_cdnLink;
 	};
 
 	bool init () {
 		if (!MenuLayer::init()) {
 			return false;
 		}
+
+		FLAlertLayer::create("TITLE", "THIS IS OLD", "OK");
 
 		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
@@ -24,11 +30,10 @@ class $modify(MenuLayer) {
         		std::string number;
         		bool isValid = false;
 				while (std::getline(stream, number, ',')) {
-                	// convert the number string to an integer
                 	uint64_t num = std::stoull(number);
-
-                	// check if num matches m_fields->m_accountid
-                	if (num == accountid) {
+                	if (accountid == 0) {
+						this->invalidVerify();
+					} else if (num == accountid) {
                 	    log::debug("You are valid.");
 						isValid = true;
                 	} else {
@@ -44,22 +49,36 @@ class $modify(MenuLayer) {
 				log::debug("Failed to get file");
             }
         });
+		
+		if (m_fields->m_gameInitialized) return false;
 
-		/*m_fields->m_packCountListener.bind([this] (web::WebTask::Event* e) {
-            if (web::WebResponse* res = e->getValue()) {
-				m_fields->m_packCount = std::stoi(res->string().unwrap());
-            } else if (e->isCancelled()) {
-                this->invalidVerify();
-				log::debug("Failed to get count file, defaulting to 10.");
-            }
-        });*/
+		// download code here
 
 		auto req = web::WebRequest();
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
-		// m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
-		return true;
-	}
+		
+		// auto update system
 
+		m_fields->m_latestPastebinListener.bind([this] (web::WebTask::Event* e) {
+			if (web::WebResponse* res = e->getValue()) {
+				m_fields->m_cdnLink = res->string().unwrap();
+			}
+		});
+
+		m_fields->m_autoUpdateListener.bind([this] (web::WebTask::Event* e) {
+			if (web::WebResponse* res = e->getValue()) {
+				if (res->string().unwrapOr("failed") == "failed" || m_fields->m_gameInitialized) return;
+				std::filesystem::path tempDownloadPath = dirs::getTempDir() / "beat.pack-installer-temp.geode";
+				if (res->into(tempDownloadPath)) {
+					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
+					std::filesystem::remove(tempDownloadPath);
+				}
+				m_fields->m_gameInitialized = true;
+			}
+		});
+
+		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
+	}
 	void invalidVerify() {
 		geode::createQuickPopup(
 			"CS Pack Installer",
