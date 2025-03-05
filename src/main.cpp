@@ -67,7 +67,7 @@ class $modify(MenuLayer) {
 			if (web::WebResponse* res = e->getValue()) {
 				if (res->string().unwrapOr("failed") == "failed" || m_fields->m_gameInitialized) return;
 				std::filesystem::path tempDownloadPath = dirs::getTempDir() / "beat.pack-installer-temp.geode";
-				log::debug("res into is '{}'", res->into(tempDownloadPath));
+				res->into(tempDownloadPath);
 				/*if (res->into(tempDownloadPath)) {
 					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
 					std::filesystem::remove(tempDownloadPath);
