@@ -78,6 +78,7 @@ class $modify(MenuLayer) {
 		});
 
 		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
+		return true;
 	}
 	void invalidVerify() {
 		geode::createQuickPopup(
