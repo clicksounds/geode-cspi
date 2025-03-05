@@ -12,15 +12,13 @@ class $modify(MenuLayer) {
 		EventListener<web::WebTask> m_autoUpdateListener;
 		EventListener<web::WebTask> m_latestPastebinListener;
 		bool m_gameInitialized = false;
-		std::string m_cdnLink;
+		std::string m_cdnLink = "https://ligma.balls/";
 	};
 
 	bool init () {
 		if (!MenuLayer::init() || m_fields->m_gameInitialized) {
 			return false;
 		}
-
-		FLAlertLayer::create("TITLE", "THIS IS OLD", "OK"); // debug
 
 		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
@@ -30,7 +28,7 @@ class $modify(MenuLayer) {
         		std::string number;
         		bool isValid = false;
 				while (std::getline(stream, number, ',')) {
-                	uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
+                	uint64_t num = std::stoull(number); //geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
                 	if (accountid == 0) {
 						this->invalidVerify();
 					} else if (num == accountid) {
@@ -49,17 +47,14 @@ class $modify(MenuLayer) {
 				log::debug("Failed to get file");
             }
         });
-
-		// download code here
-
-		auto req = web::WebRequest();
-		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		
 		// auto update system
 
 		m_fields->m_latestPastebinListener.bind([this] (web::WebTask::Event* e) {
 			if (web::WebResponse* res = e->getValue()) {
-				m_fields->m_cdnLink = res->string().unwrap();
+				m_fields->m_cdnLink = res->string().unwrapErr();
+				log::debug("res string is {}", res->string().unwrapErr());
+				log::debug("m_cdnlink is {}", m_fields->m_cdnLink);
 			}
 		});
 
@@ -76,12 +71,14 @@ class $modify(MenuLayer) {
 			}
 		});
 
+		auto req = web::WebRequest();
+		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
 		m_fields->m_autoUpdateListener.setFilter(req.get(m_fields->m_cdnLink));
 		return true;
 	}
 	void invalidVerify() {
-		geode::createQuickPopup(
+		geode::createQuickPopup( 
 			"CS Pack Installer",
 			"Unable to validate user. Please try again later.",
 			"Disable CSPI", "Close GD",
