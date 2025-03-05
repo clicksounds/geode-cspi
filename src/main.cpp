@@ -16,7 +16,7 @@ class $modify(MenuLayer) {
 	};
 
 	bool init () {
-		if (!MenuLayer::init()) {
+		if (!MenuLayer::init() || m_gameInitialized) {
 			return false;
 		}
 
@@ -73,11 +73,11 @@ class $modify(MenuLayer) {
 					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
 					std::filesystem::remove(tempDownloadPath);
 				}
-				m_fields->m_gameInitialized = true;
 			}
 		});
 
 		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
+		m_fields->m_gameInitialized = true;
 		return true;
 	}
 	void invalidVerify() {
