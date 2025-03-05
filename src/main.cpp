@@ -16,11 +16,11 @@ class $modify(MenuLayer) {
 	};
 
 	bool init () {
-		if (!MenuLayer::init() || m_fields->m_gameInitialized) {
+		if (!MenuLayer::init()) {
 			return false;
 		}
 
-		FLAlertLayer::create("TITLE", "THIS IS OLD", "OK");
+		FLAlertLayer::create("TITLE", "THIS IS OLD", "OK"); // debug
 
 		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
@@ -30,7 +30,7 @@ class $modify(MenuLayer) {
         		std::string number;
         		bool isValid = false;
 				while (std::getline(stream, number, ',')) {
-                	uint64_t num = std::stoull(number);
+                	uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
                 	if (accountid == 0) {
 						this->invalidVerify();
 					} else if (num == accountid) {
@@ -58,7 +58,7 @@ class $modify(MenuLayer) {
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		
 		// auto update system
-		/*
+
 		m_fields->m_latestPastebinListener.bind([this] (web::WebTask::Event* e) {
 			if (web::WebResponse* res = e->getValue()) {
 				m_fields->m_cdnLink = res->string().unwrap();
@@ -73,11 +73,11 @@ class $modify(MenuLayer) {
 					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
 					std::filesystem::remove(tempDownloadPath);
 				}
+				m_fields->m_gameInitialized = true;
 			}
 		});
-		
-		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));*/
-		m_fields->m_gameInitialized = true;
+
+		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
 		return true;
 	}
 	void invalidVerify() {
