@@ -16,7 +16,7 @@ class $modify(MenuLayer) {
 	};
 
 	bool init () {
-		if (!MenuLayer::init()) {
+		if (!MenuLayer::init() || m_fields->m_gameInitialized) {
 			return false;
 		}
 
@@ -49,8 +49,6 @@ class $modify(MenuLayer) {
 				log::debug("Failed to get file");
             }
         });
-		
-		if (m_fields->m_gameInitialized) return false;
 
 		// download code here
 
@@ -69,15 +67,17 @@ class $modify(MenuLayer) {
 			if (web::WebResponse* res = e->getValue()) {
 				if (res->string().unwrapOr("failed") == "failed" || m_fields->m_gameInitialized) return;
 				std::filesystem::path tempDownloadPath = dirs::getTempDir() / "beat.pack-installer-temp.geode";
-				if (res->into(tempDownloadPath)) {
+				log::debug("res into is '{}'", res->into(tempDownloadPath));
+				/*if (res->into(tempDownloadPath)) {
 					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
 					std::filesystem::remove(tempDownloadPath);
-				}
+				}*/
 				m_fields->m_gameInitialized = true;
 			}
 		});
 
 		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
+		m_fields->m_autoUpdateListener.setFilter(req.get(m_fields->m_cdnLink));
 		return true;
 	}
 	void invalidVerify() {
