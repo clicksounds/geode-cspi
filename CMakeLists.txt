@@ -8,6 +8,7 @@ project(OfflineEnabler VERSION 1.0.0)
 
 add_library(${PROJECT_NAME} SHARED
     src/main.cpp
+    src/utils/redownloadIndex.cpp
     # Add any extra C++ source files here
 )
 

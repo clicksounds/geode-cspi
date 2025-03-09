@@ -3,24 +3,21 @@
 #include <Geode/modify/GJGarageLayer.hpp>
 #include <Geode/modify/GJAccountManager.hpp>
 #include <Geode/utils/web.hpp>
+#include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
 
 class $modify(MenuLayer) {
 	struct Fields {
 		EventListener<web::WebTask> m_userVerifyListener;
-		EventListener<web::WebTask> m_autoUpdateListener;
-		EventListener<web::WebTask> m_latestPastebinListener;
-		bool m_gameInitialized = false;
-		std::string m_cdnLink = "https://ligma.balls/";
 	};
 
 	bool init () {
-		if (!MenuLayer::init() || m_fields->m_gameInitialized) {
+		if (!MenuLayer::init()) {
 			return false;
 		}
 
-		/*m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
+		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
             if (web::WebResponse* res = e->getValue()) {
                 auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
@@ -28,10 +25,11 @@ class $modify(MenuLayer) {
         		std::string number;
         		bool isValid = false;
 				while (std::getline(stream, number, ',')) {
-                	uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
-                	if (accountid == 0) {
-						this->invalidVerify();
-					} else if (num == accountid) {
+                	// convert the number string to an integer
+                	uint64_t num = std::stoull(number);
+
+                	// check if num matches m_fields->m_accountid
+                	if (num == accountid) {
                 	    log::debug("You are valid.");
 						isValid = true;
                 	} else {
@@ -46,39 +44,15 @@ class $modify(MenuLayer) {
                 this->invalidVerify();
 				log::debug("Failed to get file");
             }
-        });*/
-		
-		// auto update system
-
-		m_fields->m_latestPastebinListener.bind([this] (web::WebTask::Event* e) {
-			if (web::WebResponse* res = e->getValue()) {
-				m_fields->m_cdnLink = res->string().unwrapOr("Error: Unwrapping res string failed on pastebin listener binding.");
-				log::debug("res string is {}", res->string().unwrapOr("Error: Unwrapping res string failed on debug log"));
-				log::debug("m_cdnlink is {}", m_fields->m_cdnLink);
-			}
-		});
-
-		m_fields->m_autoUpdateListener.bind([this] (web::WebTask::Event* e) {
-			if (web::WebResponse* res = e->getValue()) {
-				if (res->string().unwrapOr("failed") == "failed" || m_fields->m_gameInitialized) return;
-				std::filesystem::path tempDownloadPath = dirs::getTempDir() / "beat.pack-installer-temp.geode";
-				res->into(tempDownloadPath);
-				if (res->into(tempDownloadPath)) {
-					std::filesystem::copy(tempDownloadPath, dirs::getModsDir() / "beat.pack-installer.geode", std::filesystem::copy_options::overwrite_existing);
-					std::filesystem::remove(tempDownloadPath);
-				}
-				m_fields->m_gameInitialized = true;
-			}
-		});
+        });
 
 		auto req = web::WebRequest();
-		//m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
-		m_fields->m_latestPastebinListener.setFilter(req.get("https://pastebin.com/raw/PTY7nQ5V"));
-		m_fields->m_autoUpdateListener.setFilter(req.get(m_fields->m_cdnLink));
+		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		return true;
 	}
+
 	void invalidVerify() {
-		geode::createQuickPopup( 
+		geode::createQuickPopup(
 			"CS Pack Installer",
 			"Unable to validate user. Please try again later.",
 			"Disable CSPI", "Close GD",
@@ -173,7 +147,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					if (btn1) {
 						addPackPopup(sender);
 					} else {
-						clearIndexPopup();
+						manageIndexPopup();
 					}
 				}
 			);
@@ -199,23 +173,45 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		);
 	}
 
-	void clearIndexPopup() {
-		std::filesystem::path dir = dirs::getGeodeDir() / "config" / "beat.click-sound" / "Clicks" / "clicks-main";
-
-		for (const auto& entry : std::filesystem::directory_iterator(dir)) {
-        	std::filesystem::remove_all(entry.path());
-    	}
-
-    	std::filesystem::create_directory(dir / "Meme");
-    	std::filesystem::create_directory(dir / "Useful");
-
+	void manageIndexPopup() {
 		geode::createQuickPopup(
 			"CS Pack Installer",
-			"Successfully cleared index! Restart to apply changes.",
-			"Close", "Restart",
-			[](auto, bool btn1) {
+			"What do you want to do to the index?",
+			"Clear it", "Redownload it",
+			[this](auto, bool btn1) {
 				if (btn1) {
-					game::restart();
+					// redownload index
+					geode::createQuickPopup(
+						"CS Pack Installer",
+						"Redownloading the index will remove all packs you've installed. Are you sure you want to do this?",
+						"Nevermind", "Redownload",
+						[this](auto, bool btn1) {
+							if (btn1) {
+								redownloadIndex();
+							}
+						}
+					);
+				} else {
+					// clear index
+					std::filesystem::path dir = dirs::getGeodeDir() / "config" / "beat.click-sound" / "Clicks" / "clicks-main";
+
+					for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        				std::filesystem::remove_all(entry.path());
+    				}
+
+    				std::filesystem::create_directory(dir / "Meme");
+    				std::filesystem::create_directory(dir / "Useful");
+
+					geode::createQuickPopup(
+						"CS Pack Installer",
+						"Successfully cleared index! Restart to apply changes.",
+						"Close", "Restart",
+						[](auto, bool btn1) {
+							if (btn1) {
+								game::restart();
+							}
+						}
+					);
 				}
 			}
 		);
