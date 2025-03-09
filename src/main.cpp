@@ -177,7 +177,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		geode::createQuickPopup(
 			"CS Pack Installer",
 			"What do you want to do to the index?",
-			"Clear it", "Redownload it",
+			"Clear", "Redownload",
 			[this](auto, bool btn1) {
 				if (btn1) {
 					// redownload index
