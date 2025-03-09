@@ -142,7 +142,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			geode::createQuickPopup(
 				"CS Pack Installer",
 				fmt::format("What would you like to do?\n\nPacks with up to {} clicks and releases per type can be installed.", m_fields->m_packCount),
-				"Clear Index", "Add Pack",
+				"Manage Index", "Add Pack",
 				[this, sender](auto, bool btn1) {
 					if (btn1) {
 						addPackPopup(sender);
@@ -183,7 +183,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					// redownload index
 					geode::createQuickPopup(
 						"CS Pack Installer",
-						"Redownloading the index will remove all packs you've installed. Are you sure you want to do this?",
+						"Redownloading the index <cr>will remove all packs you've installed</c>. \nAre you sure you want to do this?",
 						"Nevermind", "Redownload",
 						[this](auto, bool btn1) {
 							if (btn1) {

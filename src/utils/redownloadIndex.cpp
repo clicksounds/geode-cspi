@@ -44,9 +44,6 @@ void redownloadIndex() {
                 indexzipPtr->Finished = true;
 
                 Loader::get()->queueInMainThread([=] {
-                    Notification::create("CS: Download successful!", CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png"))->show();
-
-                    // delete unnecessary files to save storage space
                     std::filesystem::path clicksDir = configDir / "Clicks" / "clicks-main";
                     for (const auto& entry : std::filesystem::directory_iterator(clicksDir)) {
                         if (entry.path().filename() != "Meme" && entry.path().filename() != "Useful") {
@@ -56,6 +53,19 @@ void redownloadIndex() {
                     if (std::filesystem::exists(configDir / "Clicks.zip")) {
                         std::filesystem::remove(configDir / "Clicks.zip");
                     }
+                    
+                    Notification::create("CS: Download successful!", CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png"))->show();
+
+                    geode::createQuickPopup(
+						"CS Pack Installer",
+						"Successfully redownloaded index! Restart to apply changes.",
+						"Close", "Restart",
+						[](auto, bool btn1) {
+							if (btn1) {
+								game::restart();
+							}
+						}
+					);
                 });
             }).detach();
         } else {
