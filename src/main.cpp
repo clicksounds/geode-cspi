@@ -184,7 +184,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					geode::createQuickPopup(
 						"CS Pack Installer",
 						"Redownloading the index <cr>will remove all packs you've installed</c>. \nAre you sure you want to do this?",
-						"Nevermind", "Redownload",
+						"Cancel", "Redownload",
 						[this](auto, bool btn1) {
 							if (btn1) {
 								redownloadIndex();
