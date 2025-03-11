@@ -1,3 +1,5 @@
+# 1.2.1
+- Better compatibility with Click Sounds v2.0.17.
 # 1.2.0
 - The click sounds index can now be redownloaded from the CSPI menu.
 # 1.1.0

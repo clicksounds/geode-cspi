@@ -176,7 +176,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	void manageIndexPopup() {
 		geode::createQuickPopup(
 			"CS Pack Installer",
-			"What do you want to do to the index?",
+			"What do you want to do with the index?",
 			"Clear", "Redownload",
 			[this](auto, bool btn1) {
 				if (btn1) {
@@ -202,16 +202,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
     				std::filesystem::create_directory(dir / "Meme");
     				std::filesystem::create_directory(dir / "Useful");
 
-					geode::createQuickPopup(
-						"CS Pack Installer",
-						"Successfully cleared index! Restart to apply changes.",
-						"Close", "Restart",
-						[](auto, bool btn1) {
-							if (btn1) {
-								game::restart();
-							}
-						}
-					);
+					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index! Reload index to apply changes.", "Close")->show();
 				}
 			}
 		);
@@ -282,13 +273,10 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
                 	} else {
 						geode::createQuickPopup(
 							"CS Pack Installer",
-							"Pack installed successfully! Restart to apply changes.",
-							"Restart", "Close",
+							"Pack installed successfully! Reload index to apply changes.",
+							"Close", nullptr,
 							[newZipPath](auto, bool btn1) {
 								std::filesystem::remove(newZipPath);
-								if (!btn1) {
-									game::restart();
-								}
 							}
 						);
 					}

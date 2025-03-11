@@ -7,14 +7,6 @@ using namespace geode::prelude;
 void redownloadIndex() {
     std::filesystem::path configDir = dirs::getGeodeDir() / "config" / "beat.click-sound"; 
 
-    if (Mod::get()->getSavedValue<bool>("offlineMode") || 
-        (Mod::get()->getSettingValue<bool>("cspi") && 
-        (Loader::get()->isModLoaded("beat.index-moderator") || Loader::get()->isModLoaded("beat.pack-installer")))) {
-        indexzip.Failed = true;
-        indexzip.Finished = true;
-        return;
-    }
-
     Loader::get()->queueInMainThread([=] {
         Notification::create("CS: Downloading index...", CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png"))->show();
     });
@@ -56,16 +48,7 @@ void redownloadIndex() {
                     
                     Notification::create("CS: Download successful!", CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png"))->show();
 
-                    geode::createQuickPopup(
-						"CS Pack Installer",
-						"Successfully redownloaded index! Restart to apply changes.",
-						"Close", "Restart",
-						[](auto, bool btn1) {
-							if (btn1) {
-								game::restart();
-							}
-						}
-					);
+                    FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index! Reload index to apply changes.", "Close")->show();
                 });
             }).detach();
         } else {
