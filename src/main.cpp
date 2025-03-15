@@ -26,7 +26,7 @@ class $modify(MenuLayer) {
         		bool isValid = false;
 				while (std::getline(stream, number, ',')) {
                 	// convert the number string to an integer
-                	uint64_t num = std::stoull(number);
+                	uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
 
                 	// check if num matches m_fields->m_accountid
                 	if (num == accountid) {
