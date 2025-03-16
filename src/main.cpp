@@ -170,29 +170,15 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			{"The Click Sounds Index will need to be reloaded before you open it to apply certain changes. If you don't reload, the game may crash.", "Next"},
 			{"When freemode is not active, you will need to boost the Click Sounds discord server to use CSPI.", "Close"}
 		};
-		
-		// stop right here right fucking now if user has already read the warnings
+	
 		if (i >= msgContent.size()) {
 			Mod::get()->setSavedValue<bool>("read-warnings", true);
 			return;
 		}
 	
-		std::string btnText = (i == 0) ? "Next" : "Previous";
-		std::string nextBtnText = (i == msgContent.size() - 1) ? "Close" : "Next";
-	
-		geode::createQuickPopup("CS Pack Installer", msgContent[i].first.c_str(), nextBtnText.c_str(), nullptr, [this, i, btnText](auto, bool btn1) {
-			if (btn1) {
-				// previous button
-				if (i > 0) {
-					introPopup(i - 1);
-				} else {
-					Mod::get()->setSavedValue<bool>("read-warnings", true);
-				}
-			} else {
-				// next button
-				if (i < msgContent.size() - 1) {
-					introPopup(i + 1);
-				}
+		geode::createQuickPopup("CS Pack Installer", msgContent[i].first.c_str(), msgContent[i].second.c_str(), nullptr, [this, i](auto, bool btn1) {
+			if (!btn1) {
+				introPopup(i + 1);
 			}
 		});
 	}
