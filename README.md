@@ -1,6 +1,5 @@
 # CS Pack Installer
-Thank you for boosting the Click Sounds server!
-To begin using CSPI, you will need to be verified manually in the discord server.
-Guides are available in the discord server along with a help channel.
-
+An extension mod for Click Sounds used to install custom click packs.
+When freemode is not active, a boost to the Click Sounds discord server is required to gain permanent access to CSPI.
+Check freemode status [here.](https://clicksounds.xyz/)
 ## Find the CSPI menu in the Icon Kit.

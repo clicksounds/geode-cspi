@@ -1,3 +1,7 @@
+# 2.0.0
+- Freemode has been added.
+- CSPI is now available on the Geode Index.
+- A crash has been fixed.
 # 1.2.1
 - Better compatibility with Click Sounds v2.0.17.
 # 1.2.0

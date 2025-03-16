@@ -18,43 +18,58 @@ class $modify(MenuLayer) {
 		}
 
 		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
-            if (web::WebResponse* res = e->getValue()) {
-                auto validText = res->string();
+			if (web::WebResponse* res = e->getValue()) {
+				auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
 				std::istringstream stream(validText.unwrap());
-        		std::string number;
-        		bool isValid = false;
-				while (std::getline(stream, number, ',')) {
-                	// convert the number string to an integer
-                	uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
-
-                	// check if num matches m_fields->m_accountid
-                	if (num == accountid) {
-                	    log::debug("You are valid.");
+				std::string line;
+				
+				std::getline(stream, line);
+				std::istringstream numbersStream(line);
+				std::string number;
+				bool isValid = false;
+				
+				// check if accountid is in the list of boosters (first line of pastebin)
+				while (std::getline(numbersStream, number, ',')) {
+					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
+		
+					if (num == accountid) {
+						log::debug("You are valid.");
 						isValid = true;
-                	} else {
+					} else {
 						log::debug("You are invalid.");
 					}
 				}
+				
+				// check if freemode is enabled (second line of pastebin)
+				std::getline(stream, line);
+        		if (line == "true") {
+            		isValid = true;
+            		log::debug("Freemode is enabled.");
+        		} else {
+            		log::debug("Freemode is disabled.");
+        		}
+		
 				if (!isValid) {
-					this->invalidVerify();
+					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
 					log::debug("The isValid boolean is false.");
 				}
-            } else if (e->isCancelled()) {
-                this->invalidVerify();
+		
+			} else if (e->isCancelled()) {
+				this->invalidVerify("Failed to check freemode and boost status. Are you connected to the internet?");
 				log::debug("Failed to get file");
-            }
-        });
-
+			}
+		});
+		
 		auto req = web::WebRequest();
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		return true;
 	}
 
-	void invalidVerify() {
+	void invalidVerify(std::string errorMessage = "Unknown error.") {
 		geode::createQuickPopup(
 			"CS Pack Installer",
-			"Unable to validate user. Please try again later.",
+			fmt::format("Unable to validate user. Please try again later. Error: \n\"{}\"", errorMessage),
 			"Disable CSPI", "Close GD",
 			[this](auto, bool btn1) {
 				if (btn1) {
@@ -73,6 +88,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	struct Fields {
 		EventListener<web::WebTask> m_packCountListener;
 		int m_packCount = 10;
+		std::string m_packCountMessage = "Failed to retreive pack count message";
 	};
 	
 	bool init() {
@@ -83,12 +99,23 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		// get pack count by web
 
 		m_fields->m_packCountListener.bind([this] (web::WebTask::Event* e) {
-            if (web::WebResponse* res = e->getValue()) {
-				m_fields->m_packCount = std::stoi(res->string().unwrap());
-            } else if (e->isCancelled()) {
+			if (web::WebResponse* res = e->getValue()) {
+				auto validText = res->string();
+				std::istringstream stream(validText.unwrap());
+				std::string line;
+				
+				// get pack count (first line of pastebin)
+				std::getline(stream, line);
+				m_fields->m_packCount = std::stoi(line);
+				
+				// get pack count message (second line of pastebin)
+				std::getline(stream, line);
+				m_fields->m_packCountMessage = line;
+			} else if (e->isCancelled()) {
 				log::debug("Failed to get count file, defaulting to 10.");
-            }
-        });
+			}
+		});
+
 
 		auto req = web::WebRequest();
 		m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
@@ -117,15 +144,15 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 
 	void onPiButton(CCObject* sender) {
 		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
-			geode::createQuickPopup("CS Pack Installer", "Thank you for boosting the Click Sounds server!\n<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next", nullptr, [this](auto, bool btn1) {
+			geode::createQuickPopup("CS Pack Installer", "<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next", nullptr, [this](auto, bool btn1) {
 				if (!btn1) {
 					geode::createQuickPopup("CS Pack Installer", "To make a pack, use the pack generator on the Click Sounds website.", "Next", nullptr, [this](auto, bool btn1) {
 						if (!btn1) {
-							geode::createQuickPopup("CS Pack Installer", "To redownload the index after clearing it, disable CSPI temporarily and restart Geometry Dash.", "Next", nullptr, [this](auto, bool btn1) {
+							geode::createQuickPopup("CS Pack Installer", "The Click Sounds Index will not reset on startup while CSPI is enabled.", "Next", nullptr, [this](auto, bool btn1) {
 								if (!btn1) {
-									geode::createQuickPopup("CS Pack Installer", fmt::format("Packs installed here can have a maximum of \n<cg>{} Click Sounds and {} Release Sounds.</c>", m_fields->m_packCount, m_fields->m_packCount), "Next", nullptr, [](auto, bool btn1) {
+									geode::createQuickPopup("CS Pack Installer", "The Click Sounds Index will need to be reloaded before you open it to apply certain changes. If you don't reload, the game may crash.", "Next", nullptr, [](auto, bool btn1) {
 										if (!btn1) {
-											geode::createQuickPopup("CS Pack Installer", "Once again, thank you for boosting the server. Have fun!", "Close", nullptr, [](auto, bool btn1){
+											geode::createQuickPopup("CS Pack Installer", "When freemode is not active, you will need to boost the Click Sounds discord server to use CSPI.", "Close", nullptr, [](auto, bool btn1){
 												if (!btn1) { Mod::get()->setSavedValue<bool>("read-warnings", true); }
 											});
 										}
@@ -141,7 +168,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		if (Mod::get()->getSavedValue<bool>("read-warnings"))
 			geode::createQuickPopup(
 				"CS Pack Installer",
-				fmt::format("What would you like to do?\n\nPacks with up to {} clicks and releases per type can be installed.", m_fields->m_packCount),
+				fmt::format("What would you like to do?\n\n{}", m_fields->m_packCountMessage),
 				"Manage Index", "Add Pack",
 				[this, sender](auto, bool btn1) {
 					if (btn1) {
