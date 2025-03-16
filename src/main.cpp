@@ -143,11 +143,11 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	}
 
 	void onPiButton(CCObject* sender) {
-		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
+		if (Mod::get()->getSavedValue<bool>("read-warnings")) {
 			introPopup();
 		}
 		
-		if (Mod::get()->getSavedValue<bool>("read-warnings"))
+		if (Mod::get()->getSavedValue<bool>("read-warnings")) 
 			geode::createQuickPopup(
 				"CS Pack Installer",
 				fmt::format("What would you like to do?\n\n{}", m_fields->m_packCountMessage),
