@@ -144,26 +144,8 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 
 	void onPiButton(CCObject* sender) {
 		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
-			geode::createQuickPopup("CS Pack Installer", "<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next", nullptr, [this](auto, bool btn1) {
-				if (!btn1) {
-					geode::createQuickPopup("CS Pack Installer", "To make a pack, use the pack generator on the Click Sounds website.", "Next", nullptr, [this](auto, bool btn1) {
-						if (!btn1) {
-							geode::createQuickPopup("CS Pack Installer", "The Click Sounds Index will not reset on startup while CSPI is enabled.", "Next", nullptr, [this](auto, bool btn1) {
-								if (!btn1) {
-									geode::createQuickPopup("CS Pack Installer", "The Click Sounds Index will need to be reloaded before you open it to apply certain changes. If you don't reload, the game may crash.", "Next", nullptr, [](auto, bool btn1) {
-										if (!btn1) {
-											geode::createQuickPopup("CS Pack Installer", "When freemode is not active, you will need to boost the Click Sounds discord server to use CSPI.", "Close", nullptr, [](auto, bool btn1){
-												if (!btn1) { Mod::get()->setSavedValue<bool>("read-warnings", true); }
-											});
-										}
-									});
-								}
-							});
-						}
-					});
-				}
-			});
-		}		
+			introPopup();
+		}
 		
 		if (Mod::get()->getSavedValue<bool>("read-warnings"))
 			geode::createQuickPopup(
@@ -180,6 +162,27 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			);
 		}
 
+	void introPopup(int i = 0) {
+		static const std::vector<std::pair<std::string, std::string>> msgContent = {
+			{"<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next"},
+			{"To make a pack, use the pack generator on the Click Sounds website.", "Next"},
+			{"The Click Sounds Index will not reset on startup while CSPI is enabled.", "Next"},
+			{"The Click Sounds Index will need to be reloaded before you open it to apply certain changes. If you don't reload, the game may crash.", "Next"},
+			{"When freemode is not active, you will need to boost the Click Sounds discord server to use CSPI.", "Close"}
+		};
+	
+		if (i >= msgContent.size()) {
+			Mod::get()->setSavedValue<bool>("read-warnings", true);
+			return;
+		}
+	
+		geode::createQuickPopup("CS Pack Installer", msgContent[i].first.c_str(), msgContent[i].second.c_str(), nullptr, [this, i](auto, bool btn1) {
+			if (!btn1) {
+				introPopup(i + 1);
+			}
+		});
+	}
+	
 	void addPackPopup(CCObject* sender) {
 		geode::createQuickPopup(
 			"CS Pack Installer",
