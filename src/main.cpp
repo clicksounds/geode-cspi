@@ -1,92 +1,16 @@
 #include <Geode/Geode.hpp>
-#include <Geode/modify/MenuLayer.hpp>
-#include <Geode/modify/GJGarageLayer.hpp>
-#include <Geode/modify/GJAccountManager.hpp>
-#include <Geode/utils/web.hpp>
+#include <Geode/modify/GJGarageLayer.hpp> // cspi button
+#include <Geode/modify/GJAccountManager.hpp> // account id
+#include <Geode/utils/web.hpp> // user validation
 #include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
-
-class $modify(MenuLayer) {
-	struct Fields {
-		EventListener<web::WebTask> m_userVerifyListener;
-	};
-
-	bool init () {
-		if (!MenuLayer::init()) {
-			return false;
-		}
-
-		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
-			if (web::WebResponse* res = e->getValue()) {
-				auto validText = res->string();
-				int accountid = GJAccountManager::get()->m_accountID;
-				std::istringstream stream(validText.unwrap());
-				std::string line;
-				
-				std::getline(stream, line);
-				std::istringstream numbersStream(line);
-				std::string number;
-				bool isValid = false;
-				
-				// check if accountid is in the list of boosters (first line of pastebin)
-				while (std::getline(numbersStream, number, ',')) {
-					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
-		
-					if (num == accountid) {
-						log::debug("You are valid.");
-						isValid = true;
-					} else {
-						log::debug("You are invalid.");
-					}
-				}
-				
-				// check if freemode is enabled (second line of pastebin)
-				std::getline(stream, line);
-        		if (line == "true") {
-            		isValid = true;
-            		log::debug("Freemode is enabled.");
-        		} else {
-            		log::debug("Freemode is disabled.");
-        		}
-		
-				if (!isValid) {
-					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
-					log::debug("The isValid boolean is false.");
-				}
-		
-			} else if (e->isCancelled()) {
-				this->invalidVerify("Failed to check freemode and boost status. Are you connected to the internet?");
-				log::debug("Failed to get file");
-			}
-		});
-		
-		auto req = web::WebRequest();
-		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
-		return true;
-	}
-
-	void invalidVerify(std::string errorMessage = "Unknown error.") {
-		geode::createQuickPopup(
-			"CS Pack Installer",
-			fmt::format("Unable to validate user. Please try again later. Error: \n\"{}\"", errorMessage),
-			"Disable CSPI", "Close GD",
-			[this](auto, bool btn1) {
-				if (btn1) {
-					game::exit();
-				} else {
-					Mod::get()->disable();
-					game::restart();
-				}
-			}
-		);
-	}
-};
 
 class $modify(IndexModGarageLayer, GJGarageLayer) {
 	
 	struct Fields {
 		EventListener<web::WebTask> m_packCountListener;
+		EventListener<web::WebTask> m_userVerifyListener;
 		int m_packCount = 10;
 		std::string m_packCountMessage = "Failed to retreive pack count message";
 	};
@@ -97,7 +21,6 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		}
 
 		// get pack count by web
-
 		m_fields->m_packCountListener.bind([this] (web::WebTask::Event* e) {
 			if (web::WebResponse* res = e->getValue()) {
 				auto validText = res->string();
@@ -143,6 +66,55 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	}
 
 	void onPiButton(CCObject* sender) {
+		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
+			if (web::WebResponse* res = e->getValue()) {
+				auto validText = res->string();
+				int accountid = GJAccountManager::get()->m_accountID;
+				std::istringstream stream(validText.unwrap());
+				std::string line;
+				
+				std::getline(stream, line);
+				std::istringstream numbersStream(line);
+				std::string number;
+				bool isValid = false;
+				
+				// check if accountid is in the list of boosters (first line of pastebin)
+				while (std::getline(numbersStream, number, ',')) {
+					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
+		
+					if (num == accountid) {
+						log::debug("You are valid.");
+						isValid = true;
+						break;
+					} else {
+						log::debug("You are invalid.");
+					}
+				}
+				
+				// check if freemode is enabled (second line of pastebin)
+				std::getline(stream, line);
+        		if (line == "true") {
+            		isValid = true;
+            		log::debug("Freemode is enabled.");
+        		} else {
+            		log::debug("Freemode is disabled.");
+        		}
+		
+				if (!isValid) {
+					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
+					log::debug("The isValid boolean is false.");
+					return;
+				}
+		
+			} else if (e->isCancelled()) {
+				this->invalidVerify("Failed to check freemode and boost status. Are you connected to the internet?");
+				log::debug("Failed to get file");
+				return;
+			}
+		});
+		auto req = web::WebRequest();
+		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
+		
 		if (Mod::get()->getSavedValue<bool>("read-warnings")) {
 			introPopup();
 		}
@@ -161,6 +133,15 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				}
 			);
 		}
+
+	void invalidVerify(std::string errorMessage = "Unknown error.") {
+		geode::createQuickPopup(
+			"CS Pack Installer",
+			fmt::format("Unable to validate user. Please try again later. Error: \n\"{}\"", errorMessage),
+			"Close", nullptr,
+			[this](auto, bool btn1) {}
+		);
+	}
 
 	void introPopup(int i = 0) {
 		static const std::vector<std::pair<std::string, std::string>> msgContent = {
