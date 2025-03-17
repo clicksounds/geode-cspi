@@ -115,7 +115,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		auto req = web::WebRequest();
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
 		
-		if (Mod::get()->getSavedValue<bool>("read-warnings")) {
+		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
 			introPopup();
 		}
 		
