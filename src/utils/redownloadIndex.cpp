@@ -48,7 +48,7 @@ void redownloadIndex() {
                     
                     Notification::create("CS: Download successful!", CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png"))->show();
 
-                    FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index! Reload index to apply changes.", "Close")->show();
+                    FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index!", "Close")->show();
                 });
             }).detach();
         } else {
