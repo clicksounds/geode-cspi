@@ -8,7 +8,7 @@
 	},
 	"id": "beat.pack-installer",
 	"name": "CS Pack Installer",
-	"version": "v2.0.1",
+	"version": "v2.1.0",
 	"developer": "Beat",
 	"description": "Installs Click Packs for Click Sounds.",
 	"tags": [
@@ -21,7 +21,7 @@
 	},
 	"dependencies": {
 		"beat.click-sound": {
-			"version": ">=v2.0.17",
+			"version": ">=v2.0.18",
 			"importance": "required"
 		}
 	},

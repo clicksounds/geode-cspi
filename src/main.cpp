@@ -147,8 +147,9 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		static const std::vector<std::pair<std::string, std::string>> msgContent = {
 			{"<cr>Read these instructions carefully, as they will not be repeated.</c>", "Next"},
 			{"To make a pack, use the pack generator on the Click Sounds website.", "Next"},
-			{"The Click Sounds Index will not reset on startup while CSPI is enabled.", "Next"},
-			{"The Click Sounds Index will need to be reloaded before you open it to apply certain changes. If you don't reload, the game may crash.", "Next"},
+			{"Only <cg>.packgen.zip</c> click pack files can be installed. <cr>Packs from ZCB Live are not compatible.</c>", "Next"},
+			{"To convert a <cr>ZCB Live click pack</c> to <cg>.packgen.zip</c>, use the pack generator on the Click Sounds website.", "Next"},
+			{"The Click Sounds Index will not redownload on startup while CSPI is enabled. It can be manually updated from the CSPI menu while enabled.", "Next"},
 			{"When freemode is not active, you will need to boost the Click Sounds discord server to use CSPI.", "Close"}
 		};
 	
@@ -214,7 +215,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
     				std::filesystem::create_directory(dir / "Meme");
     				std::filesystem::create_directory(dir / "Useful");
 
-					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index! Reload index to apply changes.", "Close")->show();
+					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index!", "Close")->show();
 					std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
 				}
 			}
@@ -286,7 +287,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
                 	} else {
 						geode::createQuickPopup(
 							"CS Pack Installer",
-							"Pack installed successfully! Reload index to apply changes.",
+							"Pack installed successfully!",
 							"Close", nullptr,
 							[newZipPath](auto, bool btn1) {
 								std::filesystem::remove(newZipPath);

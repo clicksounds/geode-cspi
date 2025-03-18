@@ -1,3 +1,5 @@
+# 2.1.0
+- Reloading the Click Sounds Index is no longer necessary for any action.
 # 2.0.0
 - Freemode has been added.
 - CSPI is now available on the Geode Index.
