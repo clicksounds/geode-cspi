@@ -215,6 +215,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
     				std::filesystem::create_directory(dir / "Useful");
 
 					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index! Reload index to apply changes.", "Close")->show();
+					std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
 				}
 			}
 		);
@@ -291,6 +292,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 								std::filesystem::remove(newZipPath);
 							}
 						);
+						std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
 					}
 					return false;
             	} else {
