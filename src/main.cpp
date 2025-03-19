@@ -14,7 +14,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		int m_packCount = 10;
 		std::string m_packCountMessage = "Failed to retreive pack count message";
 	};
-	
+
 	bool init() {
 		if (!GJGarageLayer::init()) {
 			return false;
@@ -43,7 +43,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		auto req = web::WebRequest();
 		m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
 
-
+		
 		// sets the persistent directory to the geode folder if the user hasnt ever chosen a path before
 		if (Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir").empty() || !std::filesystem::exists(Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir"))) {
 			Mod::get()->setSavedValue<std::filesystem::path>("persistent-dir", dirs::getGeodeDir());

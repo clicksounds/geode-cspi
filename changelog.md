@@ -1,3 +1,5 @@
+# 2.1.1
+- Fixed a bug where redownloading index wouldn't automatically reload.
 # 2.1.0
 - Reloading the Click Sounds Index is no longer necessary for any action.
 # 2.0.0
