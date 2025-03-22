@@ -2,6 +2,7 @@
 #include <Geode/modify/GJGarageLayer.hpp> // cspi button
 #include <Geode/modify/GJAccountManager.hpp> // account id
 #include <Geode/utils/web.hpp> // user validation
+#include <Geode/loader/Index.hpp> // outdated mod updater
 #include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
@@ -67,7 +68,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	}
 
 	void onPiButton(CCObject* sender) {
-		m_fields->m_userVerifyListener.bind([this] (web::WebTask::Event* e) {
+		m_fields->m_userVerifyListener.bind([this, sender] (web::WebTask::Event* e) {
 			if (web::WebResponse* res = e->getValue()) {
 				auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
@@ -81,13 +82,12 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				// check if accountid is in the list of boosters (first line of pastebin)
 				while (std::getline(numbersStream, number, ',')) {
 					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
-		
 					if (num == accountid) {
-						log::debug("You are valid.");
+						log::debug("Account ID checked was valid.");
 						m_fields->m_isValid = true;
 						break;
 					} else {
-						log::debug("You are invalid.");
+						log::debug("Account ID checked was invalid.");
 					}
 				}
 				
@@ -96,16 +96,26 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
         		if (line == "true") {
             		m_fields->m_isValid = true;
             		log::debug("Freemode is enabled.");
+					startPopup(sender);
         		} else {
             		log::debug("Freemode is disabled.");
         		}
+
+				// check if mod version is outdated (third line of pastebin)
+				std::getline(stream, line);
+				std::string currentVersion = Mod::get()->getVersion();
+				if (line != currentVersion) {
+					log::debug("Mod version is outdated. Expected: {} but found: {}", line, currentVersion);
+					outdatedPopup(line);
+					return;
+				}
 		
 				if (!m_fields->m_isValid) {
 					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
 					log::debug("The isValid boolean is false.");
 					return;
 				}
-		
+
 			} else if (e->isCancelled()) {
 				this->invalidVerify("Failed to check freemode and boost status. Are you connected to the internet?");
 				log::debug("Failed to get file");
@@ -118,8 +128,10 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
 			introPopup();
 		}
-		
-		if (Mod::get()->getSavedValue<bool>("read-warnings") && m_fields->m_isValid) 
+	}
+
+	void startPopup(CCObject* sender) {
+		if (Mod::get()->getSavedValue<bool>("read-warnings") && m_fields->m_isValid) {
 			geode::createQuickPopup(
 				"CS Pack Installer",
 				fmt::format("What would you like to do?\n\n{}", m_fields->m_packCountMessage),
@@ -133,6 +145,20 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				}
 			);
 		}
+	}
+
+	void outdatedPopup(std::string latestVer) {
+		geode::createQuickPopup(
+			"CS Pack Installer",
+			fmt::format("CS Pack Installer is outdated. The current version is {} but the latest version is {}. \nPlease update to the latest version to continue using CS Pack Installer.", Mod::get()->getVersion(), latestVer),
+			"Close", "Update",
+			[](auto, bool btn1) {
+				if (btn1) {
+					geode::openInfoPopup(Loader::get()->getInstalledMod("beat.pack-installer"));
+				}
+			}
+		);
+	}
 
 	void invalidVerify(std::string errorMessage = "Unknown error.") {
 		geode::createQuickPopup(
