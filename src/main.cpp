@@ -2,7 +2,7 @@
 #include <Geode/modify/GJGarageLayer.hpp> // cspi button
 #include <Geode/modify/GJAccountManager.hpp> // account id
 #include <Geode/utils/web.hpp> // user validation
-#include <Geode/loader/Index.hpp> // outdated mod updater
+#include <Geode/ui/GeodeUI> // outdated mod updater
 #include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
