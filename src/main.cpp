@@ -12,6 +12,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		EventListener<web::WebTask> m_packCountListener;
 		EventListener<web::WebTask> m_userVerifyListener;
 		int m_packCount = 10;
+		bool m_isValid = false;
 		std::string m_packCountMessage = "Failed to retreive pack count message";
 	};
 
@@ -76,7 +77,6 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				std::getline(stream, line);
 				std::istringstream numbersStream(line);
 				std::string number;
-				bool isValid = false;
 				
 				// check if accountid is in the list of boosters (first line of pastebin)
 				while (std::getline(numbersStream, number, ',')) {
@@ -84,7 +84,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		
 					if (num == accountid) {
 						log::debug("You are valid.");
-						isValid = true;
+						m_fields->m_isValid = true;
 						break;
 					} else {
 						log::debug("You are invalid.");
@@ -94,13 +94,13 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				// check if freemode is enabled (second line of pastebin)
 				std::getline(stream, line);
         		if (line == "true") {
-            		isValid = true;
+            		m_fields->m_isValid = true;
             		log::debug("Freemode is enabled.");
         		} else {
             		log::debug("Freemode is disabled.");
         		}
 		
-				if (!isValid) {
+				if (!m_fields->m_isValid) {
 					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
 					log::debug("The isValid boolean is false.");
 					return;
@@ -119,7 +119,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			introPopup();
 		}
 		
-		if (Mod::get()->getSavedValue<bool>("read-warnings")) 
+		if (Mod::get()->getSavedValue<bool>("read-warnings") && m_fields->m_isValid) 
 			geode::createQuickPopup(
 				"CS Pack Installer",
 				fmt::format("What would you like to do?\n\n{}", m_fields->m_packCountMessage),
