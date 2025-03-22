@@ -2,7 +2,7 @@
 #include <Geode/modify/GJGarageLayer.hpp> // cspi button
 #include <Geode/modify/GJAccountManager.hpp> // account id
 #include <Geode/utils/web.hpp> // user validation
-#include <Geode/ui/GeodeUI> // outdated mod updater
+#include <Geode/ui/GeodeUI.hpp> // outdated mod updater
 #include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
@@ -117,10 +117,9 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				}
 
 			} else if (e->isCancelled()) {
-				this->invalidVerify("Failed to check freemode and boost status. Are you connected to the internet?");
+				this->invalidVerify("Failed to check freemode and boost status. CS Pack Installer may need an update.");
 				log::debug("Failed to get file");
 				return;
-			}
 		});
 		auto req = web::WebRequest();
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
