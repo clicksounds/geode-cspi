@@ -103,7 +103,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 
 				// check if mod version is outdated (third line of pastebin)
 				std::getline(stream, line);
-				std::string currentVersion = Mod::get()->getVersion();
+				std::string currentVersion = Mod::get()->getVersion().toVString();
 				if (line != currentVersion) {
 					log::debug("Mod version is outdated. Expected: {} but found: {}", line, currentVersion);
 					outdatedPopup(line);
@@ -120,6 +120,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				this->invalidVerify("Failed to check freemode and boost status. CS Pack Installer may need an update.");
 				log::debug("Failed to get file");
 				return;
+			}
 		});
 		auto req = web::WebRequest();
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
