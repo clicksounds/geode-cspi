@@ -3,6 +3,7 @@
 #include <Geode/modify/GJAccountManager.hpp> // account id
 #include <Geode/utils/web.hpp> // user validation
 #include <Geode/ui/GeodeUI.hpp> // outdated mod updater
+#include <Geode/utils/VersionInfo.hpp> // outdated mod updater
 #include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
@@ -83,9 +84,10 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	
 				// check if mod version is outdated (third line)
 				// IMPORTANT: This check must be done first to prevent crashes even though it's not the first line
-				std::string currentVersion = Mod::get()->getVersion().toVString();
-				if (lines[2] != currentVersion) { // directly access the third line
-					log::debug("Mod version is outdated. Expected: {} but found: {}", lines[2], currentVersion);
+				auto currentVersion = Mod::get()->getVersion();
+				auto requiredVersion = VersionInfo::parse(lines[2]).unwrap(); // pastebin line 3 needs to be in format of 1.0.0
+				if (currentVersion < requiredVersion) {
+					log::debug("Mod version is outdated. Expected: v{} but found: {}", lines[2], currentVersion);
 					outdatedPopup(lines[2]);
 					return;
 				}
@@ -98,7 +100,8 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					if (num == accountid) {
 						log::debug("Account ID checked was valid.");
 						m_fields->m_isValid = true;
-						break;
+						startPopup(sender);
+						return;
 					} else {
 						log::debug("Account ID checked was invalid.");
 					}
@@ -112,7 +115,11 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				} else {
 					log::debug("Freemode is disabled.");
 				}
-	
+				
+				for (int i = 0; i < lines.size(); i++) {
+					log::debug("Line {}: {}", i, lines[i]);
+				}
+
 				// final validity check
 				if (!m_fields->m_isValid) {
 					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
