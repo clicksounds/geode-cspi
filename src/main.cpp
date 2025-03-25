@@ -74,12 +74,25 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				int accountid = GJAccountManager::get()->m_accountID;
 				std::istringstream stream(validText.unwrap());
 				std::string line;
+				std::vector<std::string> lines;
+	
+				// read all lines into a vector
+				while (std::getline(stream, line)) {
+					lines.push_back(line);
+				}
+	
+				// check if mod version is outdated (third line)
+				// IMPORTANT: This check must be done first to prevent crashes even though it's not the first line
+				std::string currentVersion = Mod::get()->getVersion().toVString();
+				if (lines[2] != currentVersion) { // directly access the third line
+					log::debug("Mod version is outdated. Expected: {} but found: {}", lines[2], currentVersion);
+					outdatedPopup(lines[2]);
+					return;
+				}
 				
-				std::getline(stream, line);
-				std::istringstream numbersStream(line);
+				// check if accountid is in the list of boosters (first line)
+				std::istringstream numbersStream(lines[0]);
 				std::string number;
-				
-				// check if accountid is in the list of boosters (first line of pastebin)
 				while (std::getline(numbersStream, number, ',')) {
 					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
 					if (num == accountid) {
@@ -90,32 +103,23 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 						log::debug("Account ID checked was invalid.");
 					}
 				}
-				
-				// check if freemode is enabled (second line of pastebin)
-				std::getline(stream, line);
-        		if (line == "true") {
-            		m_fields->m_isValid = true;
-            		log::debug("Freemode is enabled.");
+	
+				// check if freemode is enabled (second line)
+				if (lines[1] == "true") {
+					m_fields->m_isValid = true;
+					log::debug("Freemode is enabled.");
 					startPopup(sender);
-        		} else {
-            		log::debug("Freemode is disabled.");
-        		}
-
-				// check if mod version is outdated (third line of pastebin)
-				std::getline(stream, line);
-				std::string currentVersion = Mod::get()->getVersion().toVString();
-				if (line != currentVersion) {
-					log::debug("Mod version is outdated. Expected: {} but found: {}", line, currentVersion);
-					outdatedPopup(line);
-					return;
+				} else {
+					log::debug("Freemode is disabled.");
 				}
-		
+	
+				// final validity check
 				if (!m_fields->m_isValid) {
 					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
 					log::debug("The isValid boolean is false.");
 					return;
 				}
-
+	
 			} else if (e->isCancelled()) {
 				this->invalidVerify("Failed to check freemode and boost status. CS Pack Installer may need an update.");
 				log::debug("Failed to get file");
@@ -124,7 +128,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		});
 		auto req = web::WebRequest();
 		m_fields->m_userVerifyListener.setFilter(req.get("https://pastebin.com/raw/CjABWr6F"));
-		
+	
 		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
 			introPopup();
 		}
@@ -150,7 +154,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	void outdatedPopup(std::string latestVer) {
 		geode::createQuickPopup(
 			"CS Pack Installer",
-			fmt::format("CS Pack Installer is outdated. The current version is {} but the latest version is {}. \nPlease update to the latest version to continue using CS Pack Installer.", Mod::get()->getVersion(), latestVer),
+			fmt::format("CS Pack Installer is outdated. The current version is {} but the latest required version is {}. \nPlease update to the latest version to continue using CS Pack Installer.", Mod::get()->getVersion(), latestVer),
 			"Close", "Update",
 			[](auto, bool btn1) {
 				if (btn1) {
