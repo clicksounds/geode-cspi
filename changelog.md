@@ -1,5 +1,3 @@
-# 2.1.2
-- Fixed a bug where the CSPI button sometimes required two presses to open the popup.
 # 2.1.1
 - Fixed a bug where redownloading index wouldn't automatically reload.
 # 2.1.0
