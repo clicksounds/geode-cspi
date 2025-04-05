@@ -71,36 +71,53 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
 				std::istringstream stream(validText.unwrap());
+				std::vector<std::string> lines;
 				std::string line;
-				
-				std::getline(stream, line);
-				std::istringstream numbersStream(line);
-				std::string number;
-				bool isValid = false;
 				
 				log::debug("RETRIEVED PASTEBIN CONTENTS:\n{}", validText);
 
+				// put each line into an array
+				while (std::getline(stream, line)) {
+					lines.push_back(line);
+				}
+
+				// this number needs to equal the number of lines in the pastebin
+				if (lines.size() < 2) {
+					this->invalidVerify("Unable to check permissions. CS Pack Installer may need an update.");
+					log::debug("Not enough lines in pastebin, aborting...");
+					return;
+				}
+
+				bool isValid = false;
+
 				// check if accountid is in the list of boosters (first line of pastebin)
-				while (std::getline(numbersStream, number, ',')) {
-					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
+				if (lines.size() >= 1) {
+					std::istringstream numbersStream(line);
+					std::string number;
+					
+					while (std::getline(numbersStream, number, ',')) {
+						uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
 		
-					if (num == accountid) {
-						log::debug("ID checked was valid.");
-						isValid = true;
-						break;
-					} else {
-						log::debug("ID checked was invalid.");
+						if (num == accountid) {
+							log::debug("ID checked was valid.");
+							isValid = true;
+							break;
+						} else {
+							log::debug("ID checked was invalid.");
+						}
 					}
 				}
 				
+				
 				// check if freemode is enabled (second line of pastebin)
-				std::getline(stream, line);
-        		if (line == "true") {
-            		isValid = true;
-            		log::debug("Freemode is enabled.");
-        		} else {
-            		log::debug("Freemode is disabled.");
-        		}
+				if (lines.size() >= 2 && lines[1] == "true") {
+					log::debug("Freemode is active.");
+					isValid = true;
+				} else if (lines.size() >= 2) {
+					log::debug("Freemode is inactive.");
+				} else {
+					log::debug("Lines size is less than 2, aborting...");
+				}
 				
 				if (isValid) {
 					startPopup(sender);
