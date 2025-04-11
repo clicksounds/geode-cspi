@@ -8,7 +8,7 @@
 	},
 	"id": "beat.pack-installer",
 	"name": "CS Pack Installer",
-	"version": "v2.2.0",
+	"version": "v2.1.2",
 	"developer": "Beat",
 	"description": "Installs Click Packs for Click Sounds.",
 	"tags": [
@@ -28,5 +28,13 @@
 	"links": {
 		"community": "https://discord.gg/tu98bsGA32",
 		"homepage": "https://clicksounds.xyz/"
+	},
+	"settings": {
+		"randomize-serverkey": {
+			"name": "Avoid cache issues",
+			"type": "bool",
+			"default": true,
+			"description": "Enabling can help with server update times but it can result in rate limits. Disable to avoid this if you use CSPI commonly."
+		}
 	}
 }

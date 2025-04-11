@@ -1,3 +1,6 @@
+# 2.1.2
+- Added support for iOS.
+- Added a setting for quicker server updates.
 # 2.1.1
 - Fixed a bug where redownloading index wouldn't automatically reload.
 # 2.1.0

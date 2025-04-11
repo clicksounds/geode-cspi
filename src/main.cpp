@@ -13,6 +13,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		EventListener<web::WebTask> m_userVerifyListener;
 		int m_packCount = 10;
 		std::string m_packCountMessage = "Failed to retreive pack count message";
+		bool m_isValid = false;
 	};
 
 	bool init() {
@@ -38,9 +39,10 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				log::debug("Failed to get count file, defaulting to 10.");
 			}
 		});
-
-
 		auto req = web::WebRequest();
+		std::string url = Mod::get()->getSettingValue<bool>("randomize-serverkey")
+			? "https://pastebin.com/raw/PAM4sHpv?t=" + std::to_string(std::rand() % 10000)
+    		: "https://pastebin.com/raw/PAM4sHpv";
 		m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
 
 		
@@ -71,64 +73,45 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				auto validText = res->string();
 				int accountid = GJAccountManager::get()->m_accountID;
 				std::istringstream stream(validText.unwrap());
-				std::vector<std::string> lines;
 				std::string line;
 				
-				log::debug("RETRIEVED PASTEBIN CONTENTS:\n{}", validText);
-
-				// put each line into an array
-				while (std::getline(stream, line)) {
-					lines.push_back(line);
-				}
-
-				// this number needs to equal the number of lines in the pastebin
-				if (lines.size() < 2) {
-					this->invalidVerify("Unable to check permissions. CS Pack Installer may need an update.");
-					log::debug("Not enough lines in pastebin, aborting...");
-					return;
-				}
-
-				bool isValid = false;
-
+				std::getline(stream, line);
+				std::istringstream numbersStream(line);
+				std::string number;
+				bool m_isValid;
+				
 				// check if accountid is in the list of boosters (first line of pastebin)
-				if (lines.size() >= 1) {
-					std::istringstream numbersStream(line);
-					std::string number;
-					
-					while (std::getline(numbersStream, number, ',')) {
-						uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(0);
+				while (std::getline(numbersStream, number, ',')) {
+					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(2);
 		
-						if (num == accountid) {
-							log::debug("ID checked was valid.");
-							isValid = true;
-							break;
-						} else {
-							log::debug("ID checked was invalid.");
-						}
+					if (num == accountid) {
+						log::debug("ID Checked Valid, stopping now.");
+						m_fields->m_isValid = true;
+						break;
+					} else {
+						log::debug("ID Checked Invalid, trying next one.");
 					}
 				}
 				
-				
 				// check if freemode is enabled (second line of pastebin)
-				if (lines.size() >= 2 && lines[1] == "true") {
-					log::debug("Freemode is active.");
-					isValid = true;
-				} else if (lines.size() >= 2) {
-					log::debug("Freemode is inactive.");
-				} else {
-					log::debug("Lines size is less than 2, aborting...");
-				}
-				
-				if (isValid) {
-					startPopup(sender);
-					log::debug("The isValid boolean is true.");
-					return;
-				}
-
-				if (!isValid) {
+				std::getline(stream, line);
+        		if (line == "true") {
+            		m_fields->m_isValid = true;
+            		log::debug("Freemode is enabled.");
+        		} else {
+            		log::debug("Freemode is disabled.");
+        		}
+		
+				if (!m_fields->m_isValid) {
 					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
 					log::debug("The isValid boolean is false.");
 					return;
+				}
+
+				if (Mod::get()->getSavedValue<bool>("read-warnings") && m_fields->m_isValid) {
+					startPopup(sender);
+				} else if (m_fields->m_isValid) {
+					introPopup();
 				}
 		
 			} else if (e->isCancelled()) {
@@ -136,11 +119,11 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				log::debug("Failed to get file");
 				return;
 			}
-
 		});
 		auto req = web::WebRequest();
-		std::string url = fmt::format("https://pastebin.com/raw/CjABWr6F?t={}", rand() % 1000000);
-		log::debug("URL is {}", url);
+		std::string url = Mod::get()->getSettingValue<bool>("randomize-serverkey")
+			? "https://pastebin.com/raw/CjABWr6F?t=" + std::to_string(std::rand() % 10000)
+    		: "https://pastebin.com/raw/CjABWr6F";
 		m_fields->m_userVerifyListener.setFilter(req.get(url));
 	}
 
@@ -154,10 +137,6 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	}
 
 	void startPopup(CCObject* sender) {
-		if (!Mod::get()->getSavedValue<bool>("read-warnings")) {
-			introPopup();
-			return;
-		}
 		geode::createQuickPopup(
 			"CS Pack Installer",
 			fmt::format("What would you like to do?\n\n{}", m_fields->m_packCountMessage),

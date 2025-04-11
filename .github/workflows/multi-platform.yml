@@ -2,9 +2,9 @@ name: Build Geode Mod
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - "**"
+  #push:
+  #  branches:
+  #    - "**"
 
 jobs:
   build:
@@ -26,6 +26,10 @@ jobs:
           os: ubuntu-latest
           target: Android64
 
+        - name: iOS
+          os: macos-latest
+          target: iOS
+
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
 
@@ -40,6 +44,7 @@ jobs:
           combine: true
           target: ${{ matrix.config.target }}
           sdk: nightly
+          cli: nightly
 
   package:
     name: Package builds
@@ -52,5 +57,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Build Output
+          name: CSPI Build Output
           path: ${{ steps.build.outputs.build-output }}
