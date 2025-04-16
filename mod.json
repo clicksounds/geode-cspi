@@ -21,7 +21,7 @@
 	},
 	"dependencies": {
 		"beat.click-sound": {
-			"version": ">=v2.0.18",
+			"version": ">=v2.0.20",
 			"importance": "required"
 		},
 		"alphalaneous.safe_zones_for_ios": {
