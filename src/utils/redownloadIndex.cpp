@@ -49,6 +49,7 @@ void redownloadIndex() {
                     Notification::create("CS: Download successful!", CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png"))->show();
 
                     FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index!", "Close")->show();
+                    // click sounds reads saved values, not temp dir data. fix this
                     std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
                 });
             }).detach();
