@@ -224,7 +224,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
     				std::filesystem::create_directory(dir / "Useful");
 
 					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index!", "Close")->show();
-					std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
+					Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
 				}
 			}
 		);
@@ -301,7 +301,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 								std::filesystem::remove(newZipPath);
 							}
 						);
-						std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
+						Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
 					}
 					return false;
             	} else {

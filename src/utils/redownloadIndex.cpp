@@ -9,6 +9,7 @@ void redownloadIndex() {
 
     Loader::get()->queueInMainThread([=] {
         Notification::create("CS: Downloading index...", CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png"))->show();
+        Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", true);
     });
 
     web::WebRequest().get("https://github.com/clicksounds/clicks/archive/refs/heads/main.zip").listen([=](auto res) {
@@ -18,6 +19,7 @@ void redownloadIndex() {
             });
             indexzip.Failed = true;
             indexzip.Finished = true;
+            Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
             return;
         }
 
@@ -28,6 +30,7 @@ void redownloadIndex() {
                 if (!unzip) {
                     indexzipPtr->Failed = true;
                     indexzipPtr->Finished = true;
+                    Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
                     return;
                 }
 
@@ -50,12 +53,13 @@ void redownloadIndex() {
 
                     FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index!", "Close")->show();
                     // click sounds reads saved values, not temp dir data. fix this
-                    std::ofstream((dirs::getTempDir() / "CSINDEXRELOAD").string()).close();
+                    Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
                 });
             }).detach();
         } else {
             Loader::get()->queueInMainThread([=] {
                 Notification::create("CS: Download failed.", CCSprite::createWithSpriteFrameName("GJ_deleteIcon_001.png"))->show();
+                Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
             });
         }
     }, [](auto prog) {
