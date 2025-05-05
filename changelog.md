@@ -1,3 +1,5 @@
+# 2.1.3
+- Fixed bug where the index refuses to open after installing a pack
 # 2.1.2
 - Added support for iOS.
 - Added a setting for quicker server updates.
