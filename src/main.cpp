@@ -41,9 +41,9 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		});
 		auto req = web::WebRequest();
 		std::string url = Mod::get()->getSettingValue<bool>("randomize-serverkey")
-			? "https://pastebin.com/raw/PAM4sHpv?t=" + std::to_string(std::rand() % 10000)
-    		: "https://pastebin.com/raw/PAM4sHpv";
-		m_fields->m_packCountListener.setFilter(req.get("https://pastebin.com/raw/PAM4sHpv"));
+			? "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/packlimit.csv?t=" + std::to_string(std::rand() % 10000)
+    		: "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/packlimit.csv";
+		m_fields->m_packCountListener.setFilter(req.get(url));
 
 		
 		// sets the persistent directory to the geode folder if the user hasnt ever chosen a path before
@@ -80,7 +80,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				std::string number;
 				bool m_isValid;
 				
-				// check if accountid is in the list of boosters (first line of pastebin)
+				// check if accountid is in the list of boosters (first line of uservalidation.csv)
 				while (std::getline(numbersStream, number, ',')) {
 					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(2);
 		
@@ -93,7 +93,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					}
 				}
 				
-				// check if freemode is enabled (second line of pastebin)
+				// check if freemode is enabled (second line of uservalidation.csv)
 				std::getline(stream, line);
         		if (line == "true") {
             		m_fields->m_isValid = true;
@@ -122,8 +122,8 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		});
 		auto req = web::WebRequest();
 		std::string url = Mod::get()->getSettingValue<bool>("randomize-serverkey")
-			? "https://pastebin.com/raw/CjABWr6F?t=" + std::to_string(std::rand() % 10000)
-    		: "https://pastebin.com/raw/CjABWr6F";
+			? "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/validation.csv?t=" + std::to_string(std::rand() % 10000)
+    		: "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/validation.csv";
 		m_fields->m_userVerifyListener.setFilter(req.get(url));
 	}
 
