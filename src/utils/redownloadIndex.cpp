@@ -54,6 +54,7 @@ void redownloadIndex() {
                     FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index!", "Close")->show();
                     // click sounds reads saved values, not temp dir data. fix this
                     Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
+                    Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
                 });
             }).detach();
         } else {
