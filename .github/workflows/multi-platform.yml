@@ -43,7 +43,7 @@ jobs:
           bindings-ref: main
           combine: true
           target: ${{ matrix.config.target }}
-          sdk: nightly
+        # sdk: nightly
           cli: nightly
 
   package:
