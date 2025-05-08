@@ -7,45 +7,11 @@
 using namespace geode::prelude;
 
 class $modify(IndexModGarageLayer, GJGarageLayer) {
-	
-	struct Fields {
-		EventListener<web::WebTask> m_packCountListener;
-		EventListener<web::WebTask> m_userVerifyListener;
-		int m_packCount = 10;
-		std::string m_packCountMessage = "Failed to retreive pack count message";
-		bool m_isValid = false;
-	};
-
 	bool init() {
 		if (!GJGarageLayer::init()) {
 			return false;
 		}
 
-		// get pack count by web
-		m_fields->m_packCountListener.bind([this] (web::WebTask::Event* e) {
-			if (web::WebResponse* res = e->getValue()) {
-				auto validText = res->string();
-				std::istringstream stream(validText.unwrap());
-				std::string line;
-				
-				// get pack count (first line of pastebin)
-				std::getline(stream, line);
-				m_fields->m_packCount = std::stoi(line);
-				
-				// get pack count message (second line of pastebin)
-				std::getline(stream, line);
-				m_fields->m_packCountMessage = line;
-			} else if (e->isCancelled()) {
-				log::debug("Failed to get count file, defaulting to 10.");
-			}
-		});
-		auto req = web::WebRequest();
-		std::string url = Mod::get()->getSettingValue<bool>("randomize-serverkey")
-			? "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/packlimit.csv?t=" + std::to_string(std::rand() % 10000)
-    		: "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/packlimit.csv";
-		m_fields->m_packCountListener.setFilter(req.get(url));
-
-		
 		// sets the persistent directory to the geode folder if the user hasnt ever chosen a path before
 		if (Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir").empty() || !std::filesystem::exists(Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir"))) {
 			Mod::get()->setSavedValue<std::filesystem::path>("persistent-dir", dirs::getGeodeDir());
@@ -68,78 +34,13 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 	}
 
 	void onPiButton(CCObject* sender) {
-		m_fields->m_userVerifyListener.bind([this, sender] (web::WebTask::Event* e) {
-			if (web::WebResponse* res = e->getValue()) {
-				auto validText = res->string();
-				int accountid = GJAccountManager::get()->m_accountID;
-				std::istringstream stream(validText.unwrap());
-				std::string line;
-				
-				std::getline(stream, line);
-				std::istringstream numbersStream(line);
-				std::string number;
-				bool m_isValid;
-				
-				// check if accountid is in the list of boosters (first line of uservalidation.csv)
-				while (std::getline(numbersStream, number, ',')) {
-					uint64_t num = geode::utils::numFromString<uint64_t>(number).unwrapOr(2);
-		
-					if (num == accountid) {
-						log::debug("ID Checked Valid, stopping now.");
-						m_fields->m_isValid = true;
-						break;
-					} else {
-						log::debug("ID Checked Invalid, trying next one.");
-					}
-				}
-				
-				// check if freemode is enabled (second line of uservalidation.csv)
-				std::getline(stream, line);
-        		if (line == "true") {
-            		m_fields->m_isValid = true;
-            		log::debug("Freemode is enabled.");
-        		} else {
-            		log::debug("Freemode is disabled.");
-        		}
-		
-				if (!m_fields->m_isValid) {
-					this->invalidVerify("You are not a server booster and freemode is inactive. Please boost the Click Sounds discord server for permanent access.");
-					log::debug("The isValid boolean is false.");
-					return;
-				}
-
-				if (Mod::get()->getSavedValue<bool>("read-warnings") && m_fields->m_isValid) {
-					startPopup(sender);
-				} else if (m_fields->m_isValid) {
-					introPopup();
-				}
-		
-			} else if (e->isCancelled()) {
-				this->invalidVerify("Failed to check freemode and boost status. Are you connected to the internet?");
-				log::debug("Failed to get file");
-				return;
-			}
-		});
-		auto req = web::WebRequest();
-		std::string url = Mod::get()->getSettingValue<bool>("randomize-serverkey")
-			? "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/validation.csv?t=" + std::to_string(std::rand() % 10000)
-    		: "https://raw.githubusercontent.com/BeatACVR/geode-cspi-release/refs/heads/main/validation.csv";
-		m_fields->m_userVerifyListener.setFilter(req.get(url));
-	}
-
-	void invalidVerify(std::string errorMessage = "Unknown error.") {
-		geode::createQuickPopup(
-			"CS Pack Installer",
-			fmt::format("Unable to validate user. Please try again later. Error: \n\"{}\"", errorMessage),
-			"Close", nullptr,
-			[this](auto, bool btn1) {}
-		);
+		Mod::get()->getSavedValue<bool>("read-warnings") ? startPopup(sender) : introPopup();
 	}
 
 	void startPopup(CCObject* sender) {
 		geode::createQuickPopup(
 			"CS Pack Installer",
-			fmt::format("What would you like to do?\n\n{}", m_fields->m_packCountMessage),
+			"What would you like to do?\n\nPacks with over 25 clicks and/or 25 releases will not be accepted on the Click Sounds Index.",
 			"Manage Index", "Add Pack",
 			[this, sender](auto, bool btn1) {
 				if (btn1) {
@@ -184,15 +85,13 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			"Select the sound type you will install.",
 			"Meme", "Useful",
 			[this, sender](auto, bool btn1) {
-			std::filesystem::path dir = dirs::getGeodeDir() / "config" / "beat.click-sound" / "Clicks" / "clicks-main";
+			std::filesystem::path dir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir() / "Clicks" / "clicks-main";
 				if (btn1) {
 					dir /= "Useful";
 					fileSelection(sender, dir, "useful");
-					log::debug("useful button selected, dir is {}", dir);
 				} else {
 					dir /= "Meme";
 					fileSelection(sender, dir, "meme");
-					log::debug("meme button selected, dir is {}", dir);
 				}
 			}
 		);
@@ -218,7 +117,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					);
 				} else {
 					// clear index
-					std::filesystem::path dir = dirs::getGeodeDir() / "config" / "beat.click-sound" / "Clicks" / "clicks-main";
+					std::filesystem::path dir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir() / "Clicks" / "clicks-main";
 
 					for (const auto& entry : std::filesystem::directory_iterator(dir)) {
 						std::filesystem::remove_all(entry.path());
@@ -248,7 +147,6 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				if (res->isOk()) {
             	    path = res->unwrap();
 					Mod::get()->setSavedValue<std::filesystem::path>("persistent-dir", path);
-					log::debug("fileSelection(): The path stored in path variable is\n {}", path);
 
                 	std::filesystem::path newDir = dir / path.stem();
                 	std::filesystem::create_directory(newDir);
@@ -262,55 +160,20 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					std::filesystem::path clicksDir = newDir / "Clicks";
                 	std::filesystem::path releasesDir = newDir / "Releases";
 
-                	int numClicksFiles = 0;
-                	int numReleasesFiles = 0;
-
-                	if (std::filesystem::exists(clicksDir) && std::filesystem::is_directory(clicksDir)) {
-                	    for (const auto& entry : std::filesystem::directory_iterator(clicksDir)) {
-                	        if (std::filesystem::is_regular_file(entry)) {
-                	            numClicksFiles++;
-                	        }
-                	    }
-                	}
-
-                	
-                	if (std::filesystem::exists(releasesDir) && std::filesystem::is_directory(releasesDir)) {
-                	    for (const auto& entry : std::filesystem::directory_iterator(releasesDir)) {
-                	        if (std::filesystem::is_regular_file(entry)) {
-                	            numReleasesFiles++;
-                	        }
-                	    }
-                	}
-
 					if (!unzipResult) return false;
                 	
-                	if (numClicksFiles > m_fields->m_packCount || numReleasesFiles > m_fields->m_packCount) {
-                	    Loader::get()->queueInMainThread([=] {
-							std::filesystem::remove_all(newDir);
-						});
-						geode::createQuickPopup(
-							"CS Pack Installer",
-							fmt::format("Pack failed to install: Too many files (max {} clicks and {} releases)", m_fields->m_packCount, m_fields->m_packCount),
-							"Close", nullptr,
-							[newZipPath](auto, bool btn1) {
-								std::filesystem::remove(newZipPath);
-							}
-						);
-                	} else {
-						geode::createQuickPopup(
-							"CS Pack Installer",
-							"Pack installed successfully!",
-							"Close", nullptr,
-							[newZipPath](auto, bool btn1) {
-								std::filesystem::remove(newZipPath);
-							}
-						);
-						Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
-					}
+					geode::createQuickPopup(
+						"CS Pack Installer",
+						"Pack installed successfully!",
+						"Close", nullptr,
+						[newZipPath](auto, bool btn1) {
+							std::filesystem::remove(newZipPath);
+						}
+					);
+
+					Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
 					return false;
-            	} else {
-					log::debug("Res not okay, res is ({})", res->unwrapErr());
-				}
+            	}
 				return true;
         	});
 		return;

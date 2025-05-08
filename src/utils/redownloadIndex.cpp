@@ -5,7 +5,7 @@
 using namespace geode::prelude;
 
 void redownloadIndex() {
-    std::filesystem::path configDir = dirs::getGeodeDir() / "config" / "beat.click-sound"; 
+    std::filesystem::path configDir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir();
 
     Loader::get()->queueInMainThread([=] {
         Notification::create("CS: Downloading index...", CCSprite::createWithSpriteFrameName("GJ_timeIcon_001.png"))->show();
@@ -17,26 +17,20 @@ void redownloadIndex() {
             Loader::get()->queueInMainThread([=] {
                 Notification::create("CS: Download failed.", CCSprite::createWithSpriteFrameName("GJ_deleteIcon_001.png"))->show();
             });
-            indexzip.Failed = true;
-            indexzip.Finished = true;
             Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
             return;
         }
 
         if (res->into(configDir / "Clicks.zip")) {
-            auto indexzipPtr = std::make_shared<decltype(indexzip)>(indexzip);
             std::thread([=] {
                 auto unzip = file::Unzip::create(configDir / "Clicks.zip");
                 if (!unzip) {
-                    indexzipPtr->Failed = true;
-                    indexzipPtr->Finished = true;
                     Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
                     return;
                 }
 
                 std::filesystem::remove_all(configDir / "Clicks");
                 (void) unzip.unwrap().extractAllTo(configDir / "Clicks");
-                indexzipPtr->Finished = true;
 
                 Loader::get()->queueInMainThread([=] {
                     std::filesystem::path clicksDir = configDir / "Clicks" / "clicks-main";
@@ -52,7 +46,6 @@ void redownloadIndex() {
                     Notification::create("CS: Download successful!", CCSprite::createWithSpriteFrameName("GJ_completesIcon_001.png"))->show();
 
                     FLAlertLayer::create("CS Pack Installer", "Successfully redownloaded index!", "Close")->show();
-                    // click sounds reads saved values, not temp dir data. fix this
                     Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
                     Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
                 });
@@ -63,14 +56,10 @@ void redownloadIndex() {
                 Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
             });
         }
-    }, [](auto prog) {
-        // log::debug("download");
     },
     [=]() {
         Loader::get()->queueInMainThread([=] {
             Notification::create("CS: Download failed.", CCSprite::createWithSpriteFrameName("GJ_deleteIcon_001.png"))->show();
         });
-        indexzip.Failed = true;
-        indexzip.Finished = true;
     });
 }
