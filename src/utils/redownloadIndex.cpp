@@ -56,7 +56,7 @@ void redownloadIndex() {
                 Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXDOWNLOADING", false);
             });
         }
-    },
+    }, [](auto prog) {},
     [=]() {
         Loader::get()->queueInMainThread([=] {
             Notification::create("CS: Download failed.", CCSprite::createWithSpriteFrameName("GJ_deleteIcon_001.png"))->show();
