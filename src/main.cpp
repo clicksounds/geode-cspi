@@ -145,7 +145,11 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				if (btn1) {
 					addPackPopup(sender);
 				} else {
-					manageIndexPopup();
+					if (!Loader::get()->getInstalledMod("beat.click-sound")->getSavedValue<bool>("CSINDEXDOWNLOADING")) {
+						manageIndexPopup();
+					} else {
+						FLAlertLayer::create("CS Pack Installer", "The index can not be managed while it is downloading. Please wait.", "Close")->show();
+					}
 				}
 			}
 		);
@@ -217,11 +221,11 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 					std::filesystem::path dir = dirs::getGeodeDir() / "config" / "beat.click-sound" / "Clicks" / "clicks-main";
 
 					for (const auto& entry : std::filesystem::directory_iterator(dir)) {
-        				std::filesystem::remove_all(entry.path());
-    				}
+						std::filesystem::remove_all(entry.path());
+					}
 
-    				std::filesystem::create_directory(dir / "Meme");
-    				std::filesystem::create_directory(dir / "Useful");
+					std::filesystem::create_directory(dir / "Meme");
+					std::filesystem::create_directory(dir / "Useful");
 
 					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index!", "Close")->show();
 					Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
