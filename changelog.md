@@ -1,5 +1,6 @@
 # 2.1.3
-- Fixed bug where the index refuses to open after installing a pack
+- Fixed a bug where the index refuses to open after installing a pack.
+- To prevent crashes, the 'manage index' page will no longer open while the index is downloading.
 # 2.1.2
 - Added support for iOS.
 - Added a setting for quicker server updates.
