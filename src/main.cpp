@@ -7,6 +7,11 @@
 using namespace geode::prelude;
 
 class $modify(IndexModGarageLayer, GJGarageLayer) {
+	
+	struct Fields {
+		bool m_filePickerOpen = false;
+	};
+
 	bool init() {
 		if (!GJGarageLayer::init()) {
 			return false;
@@ -44,7 +49,7 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			"Manage Index", "Add Pack",
 			[this, sender](auto, bool btn1) {
 				if (btn1) {
-					addPackPopup(sender);
+					fileSelection(sender);
 				} else {
 					if (!Loader::get()->getInstalledMod("beat.click-sound")->getSavedValue<bool>("CSINDEXDOWNLOADING")) {
 						manageIndexPopup();
@@ -76,25 +81,6 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 				introPopup(i + 1);
 			}
 		});
-	}
-		
-		
-	void addPackPopup(CCObject* sender) {
-		geode::createQuickPopup(
-			"CS Pack Installer",
-			"Select the sound type you will install.",
-			"Meme", "Useful",
-			[this, sender](auto, bool btn1) {
-			std::filesystem::path dir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir() / "Clicks" / "clicks-main";
-				if (btn1) {
-					dir /= "Useful";
-					fileSelection(sender, dir, "useful");
-				} else {
-					dir /= "Meme";
-					fileSelection(sender, dir, "meme");
-				}
-			}
-		);
 	}
 
 	void manageIndexPopup() {
@@ -133,49 +119,75 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		);
 	}
 
-	void fileSelection(CCObject* sender, std::filesystem::path dir, std::string type) {
+	void fileSelection(CCObject* sender) {
+		std::filesystem::path dir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir() / "Clicks" / "clicks-main";
 		file::FilePickOptions::Filter textFilter;
-        file::FilePickOptions fileOptions;
-        textFilter.description = "Click Pack";
-        textFilter.files = {"*.zip"};
-        fileOptions.filters.push_back(textFilter);
+		file::FilePickOptions fileOptions;
+		textFilter.description = "Click Pack";
+		textFilter.files = { "*.zip" };
+		fileOptions.filters.push_back(textFilter);
 		auto getPersistentDir = Mod::get()->getSavedValue<std::filesystem::path>("persistent-dir");
 
+		if (m_fields->m_filePickerOpen) return;
+		m_fields->m_filePickerOpen = true;
+
 		file::pick(file::PickMode::OpenFile, { getPersistentDir, { textFilter } }).listen(
-			[this,sender,dir](Result<std::filesystem::path>* res) {
+			[this, sender, dir](Result<std::filesystem::path>* res) {
 				std::filesystem::path path;
+				if (!res || !res->isOk()) return false;
 				if (res->isOk()) {
-            	    path = res->unwrap();
+					path = res->unwrap();
 					Mod::get()->setSavedValue<std::filesystem::path>("persistent-dir", path);
 
-                	std::filesystem::path newDir = dir / path.stem();
-                	std::filesystem::create_directory(newDir);
-                
-                	std::filesystem::path newZipPath = newDir / path.filename();
-                	std::filesystem::copy(path, newZipPath, std::filesystem::copy_options::overwrite_existing);
+					std::filesystem::path tempDir = dirs::getTempDir() / path.stem();
+					std::filesystem::create_directories(tempDir);
 
-					auto unzip = file::Unzip::create(newZipPath);
-					auto unzipResult = unzip.unwrap().extractAllTo(newDir);
+					std::filesystem::path tempZipPath = tempDir / path.filename();
+					std::filesystem::copy(path, tempZipPath, std::filesystem::copy_options::overwrite_existing);
 
-					std::filesystem::path clicksDir = newDir / "Clicks";
-                	std::filesystem::path releasesDir = newDir / "Releases";
-
+					auto unzip = file::Unzip::create(tempZipPath);
+					auto unzipResult = unzip.unwrap().extractAllTo(tempDir);
 					if (!unzipResult) return false;
-                	
+
+					std::filesystem::path packJsonPath = tempDir / "pack.json";
+					std::string type = "Useful";
+
+					if (std::filesystem::exists(packJsonPath)) {
+						std::ifstream jsonFile(packJsonPath);
+						if (jsonFile.is_open()) {
+							std::string content((std::istreambuf_iterator<char>(jsonFile)), std::istreambuf_iterator<char>());
+							auto jsonData = matjson::parse(content).unwrapOr(-2);
+							if (jsonData.contains("type")) {
+								auto val = jsonData.get("type").unwrap();
+								if (val == "Meme") type = "Meme";
+							}
+						}
+					}
+
+					std::filesystem::path newDir = dir / type / path.stem();
+					std::filesystem::create_directories(newDir);
+
+					for (auto& p : std::filesystem::recursive_directory_iterator(tempDir)) {
+						if (p.is_directory()) continue;
+						auto rel = std::filesystem::relative(p.path(), tempDir);
+						std::filesystem::create_directories(newDir / rel.parent_path());
+						std::filesystem::copy_file(p.path(), newDir / rel, std::filesystem::copy_options::overwrite_existing);
+					}
+
 					geode::createQuickPopup(
 						"CS Pack Installer",
 						"Pack installed successfully!",
 						"Close", nullptr,
-						[newZipPath](auto, bool btn1) {
-							std::filesystem::remove(newZipPath);
+						[tempZipPath](auto, bool) {
+							std::filesystem::remove(tempZipPath);
 						}
 					);
 
 					Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
 					return false;
-            	}
+				}
 				return true;
-        	});
+			});
 		return;
 	}
 };

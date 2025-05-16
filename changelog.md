@@ -1,9 +1,12 @@
+# 3.1.0
+- Selecting the pack type is now done automatically.
+- Fixed a bug where the file picker could open several times.
 # 3.0.0
-- CSPI is now free-to-use forever
-- The amount of sounds allowed in a pack is now unlimited
-- CSPI now works offline
-- Fixed a lot of bad code
-- CSPI is now open source
+- CSPI is now free-to-use forever.
+- The amount of sounds allowed in a pack is now unlimited.
+- CSPI now works offline.
+- Bad code has been replaced with better code.
+- CSPI is now open source.
 # 2.1.3
 - Fixed a bug where the index refuses to open after installing a pack.
 - To prevent crashes, the 'manage index' page will no longer open while the index is downloading.
