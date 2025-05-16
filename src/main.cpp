@@ -1,7 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/GJGarageLayer.hpp> // cspi button
-#include <Geode/modify/GJAccountManager.hpp> // account id
-#include <Geode/utils/web.hpp> // user validation
 #include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
