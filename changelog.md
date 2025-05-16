@@ -1,5 +1,6 @@
 # 3.1.0
 - Selecting the pack type is now done automatically.
+- Redownloading the Click Sounds Index has been removed in favor of Click Sounds v2.0.23's built-in redownload feature.
 - Fixed a bug where the file picker could open several times.
 # 3.0.0
 - CSPI is now free-to-use forever.

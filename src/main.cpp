@@ -1,6 +1,5 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/GJGarageLayer.hpp> // cspi button
-#include "utils/redownloadIndex.h"
 
 using namespace geode::prelude;
 
@@ -44,15 +43,15 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		geode::createQuickPopup(
 			"CS Pack Installer",
 			"What would you like to do?\n\nPacks with over 25 clicks and/or 25 releases will not be accepted on the Click Sounds Index.",
-			"Manage Index", "Add Pack",
+			"Clear Index", "Add Pack",
 			[this, sender](auto, bool btn1) {
 				if (btn1) {
 					fileSelection(sender);
 				} else {
 					if (!Loader::get()->getInstalledMod("beat.click-sound")->getSavedValue<bool>("CSINDEXDOWNLOADING")) {
-						manageIndexPopup();
+						clearIndex();
 					} else {
-						FLAlertLayer::create("CS Pack Installer", "The index can not be managed while it is downloading. Please wait.", "Close")->show();
+						FLAlertLayer::create("CS Pack Installer", "The index can not be cleared while it is downloading. Please wait.", "Close")->show();
 					}
 				}
 			}
@@ -65,8 +64,8 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 			{"To make a pack, use the pack generator on the Click Sounds website.", "Next"},
 			{"Only <cg>.packgen.zip</c> click pack files can be installed. <cr>Packs from ZCB Live are not compatible.</c>", "Next"},
 			{"To convert a <cr>ZCB Live click pack</c> to <cg>.packgen.zip</c>, use the pack generator on the Click Sounds website.", "Next"},
-			{"The Click Sounds Index will not redownload on startup while CSPI is enabled. It can be manually updated from the CSPI menu while enabled.", "Next"},
-			{"When freemode is not active, you will need to boost the Click Sounds discord server to use CSPI.", "Close"}
+			{"If the 'Download Index on Startup' setting of Click Sounds is enabled, custom packs will be removed when the game restarts.", "Next"},
+			{"A guide to using Click Sounds Pack Installer (CSPI) is available on the Click Sounds website.", "Close"}
 		};
 	
 		if (i >= msgContent.size()) {
@@ -81,40 +80,18 @@ class $modify(IndexModGarageLayer, GJGarageLayer) {
 		});
 	}
 
-	void manageIndexPopup() {
-		geode::createQuickPopup(
-			"CS Pack Installer",
-			"What do you want to do with the index?",
-			"Clear", "Redownload",
-			[this](auto, bool btn1) {
-				if (btn1) {
-					// redownload index
-					geode::createQuickPopup(
-						"CS Pack Installer",
-						"Redownloading the index <cr>will remove all packs you've installed</c>. \nAre you sure you want to do this?",
-						"Cancel", "Redownload",
-						[this](auto, bool btn1) {
-							if (btn1) {
-								redownloadIndex();
-							}
-						}
-					);
-				} else {
-					// clear index
-					std::filesystem::path dir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir() / "Clicks" / "clicks-main";
+	void clearIndex() {
+		std::filesystem::path dir = Loader::get()->getInstalledMod("beat.click-sound")->getConfigDir() / "Clicks" / "clicks-main";
 
-					for (const auto& entry : std::filesystem::directory_iterator(dir)) {
-						std::filesystem::remove_all(entry.path());
-					}
+		for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+			std::filesystem::remove_all(entry.path());
+		}
 
-					std::filesystem::create_directory(dir / "Meme");
-					std::filesystem::create_directory(dir / "Useful");
+		std::filesystem::create_directory(dir / "Meme");
+		std::filesystem::create_directory(dir / "Useful");
 
-					FLAlertLayer::create("CS Pack Installer", "Successfully cleared index!", "Close")->show();
-					Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
-				}
-			}
-		);
+		FLAlertLayer::create("CS Pack Installer", "Successfully cleared index!", "Close")->show();
+		Loader::get()->getInstalledMod("beat.click-sound")->setSavedValue("CSINDEXRELOAD", true);
 	}
 
 	void fileSelection(CCObject* sender) {
