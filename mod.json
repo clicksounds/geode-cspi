@@ -1,22 +1,33 @@
 {
-	"geode": "4.9.0",
+	"geode": "4.4.0",
 	"gd": {
 		"win": "2.2074",
 		"android": "2.2074",
 		"mac": "2.2074",
 		"ios": "2.2074"
 	},
-	"id": "beat.wii_fit_scanner",
-	"name": "Wii Fit Scanner",
-	"version": "v1.0.0",
+	"id": "beat.pack-installer",
+	"name": "Click Sounds Pack Installer",
+	"version": "v3.1.0",
 	"developer": "Beat",
-	"description": "Scan your Wii Fit save files!",
-	"dependencies": {
-		"geode.node-ids": ">=v1.20.0"
-	},
+	"description": "Installs Click Packs for Click Sounds.",
+	"tags": [
+		"utility"
+	],
 	"resources": {
 		"sprites": [
-			"resources/**/*.png"
+			"resources/piicon.png"
 		]
+	},
+	"dependencies": {
+		"beat.click-sound": {
+			"version": ">=v2.0.21",
+			"importance": "required"
+		}
+	},
+	"links": {
+		"community": "https://discord.gg/tu98bsGA32",
+		"homepage": "https://clicksounds.github.io/clicks",
+		"source": "https://github.com/clicksounds/geode-cspi"
 	}
 }
